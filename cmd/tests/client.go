@@ -24,6 +24,8 @@ func HealthCheck(endpoint string) (int, map[string] HealthCheckResult ) {
 	resp, body, errs := gorequest.New().
 		SetDebug(debugHTTP).
 		Get(url).
+		Set("Accept", "application/json").
+		Set("Content-Type", "").
 		Timeout(time.Duration(serviceTimeout) * time.Second).
 		End()
 
@@ -56,6 +58,8 @@ func VersionCheck(endpoint string) (int, string) {
 	resp, body, errs := gorequest.New().
 		SetDebug(debugHTTP).
 		Get(url).
+		Set("Accept", "application/json").
+		Set("Content-Type", "").
 		Timeout(time.Duration(serviceTimeout) * time.Second).
 		End()
 
@@ -86,6 +90,8 @@ func MetricsCheck(endpoint string) (int, string) {
 	resp, body, errs := gorequest.New().
 		SetDebug(debugHTTP).
 		Get(url).
+		Set("Accept", "*/*").
+		Set("Content-Type", "").
 		Timeout(time.Duration(serviceTimeout) * time.Second).
 		End()
 

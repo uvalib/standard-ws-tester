@@ -17,7 +17,7 @@ func TestMetricsCheck(t *testing.T) {
 		t.Fatalf("Expected %v, got %v\n", expected, status)
 	}
 
-	if emptyField(metrics) {
+	if emptyField(metrics) == true {
 		t.Fatalf("Expected non-empty metrics info\n")
 	}
 
