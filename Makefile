@@ -1,19 +1,16 @@
 # project specific definitions
 SRCDIR = cmd
 
-GOCMD=go
-GOBUILD=$(GOCMD) build
-GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
-
-#build: darwin
-
-#all: darwin linux
+GOCMD = go
+GOBUILD = $(GOCMD) build
+GOCLEAN = $(GOCMD) clean
+GOTEST = $(GOCMD) test
+GOGET = $(GOCMD) get
 
 test:
 	@ \
 	(cd "$(SRCDIR)/tests" && $(GOTEST) -v) ;
 
-#clean:
-#	$(GOCLEAN)
-#	rm -rf bin
+#deps:
+#	cd $(SRCDIR); $(GOGET) -u
+#	$(GOMOD) tidy
