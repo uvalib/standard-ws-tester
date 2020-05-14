@@ -11,7 +11,7 @@ import (
 )
 
 var debugHTTP = false
-var serviceTimeout = 5
+var serviceTimeout = 15
 
 //
 // HealthCheck -- calls the service health check method
@@ -30,6 +30,7 @@ func HealthCheck(endpoint string) (int, map[string] HealthCheckResult ) {
 		End()
 
 	if errs != nil {
+		fmt.Printf( "ERROR: request to %s returns: %s\n", url, errs[0])
 		return http.StatusInternalServerError, nil
 	}
 
@@ -41,6 +42,7 @@ func HealthCheck(endpoint string) (int, map[string] HealthCheckResult ) {
 
 	err := json.Unmarshal([]byte(body), &m)
 	if err != nil {
+		fmt.Printf( "ERROR: unmarshal of [%s] returns: %s\n", body, err)
 		return http.StatusInternalServerError, nil
 	}
 
@@ -64,6 +66,7 @@ func VersionCheck(endpoint string) (int, string) {
 		End()
 
 	if errs != nil {
+		fmt.Printf( "ERROR: request to %s returns: %s\n", url, errs[0])
 		return http.StatusInternalServerError, ""
 	}
 
@@ -73,6 +76,7 @@ func VersionCheck(endpoint string) (int, string) {
 	r := VersionResponse{}
 	err := json.Unmarshal([]byte(body), &r)
 	if err != nil {
+		fmt.Printf( "ERROR: unmarshal of [%s] returns: %s\n", body, err)
 		return http.StatusInternalServerError, ""
 	}
 
@@ -96,6 +100,7 @@ func MetricsCheck(endpoint string) (int, string) {
 		End()
 
 	if errs != nil {
+		fmt.Printf( "ERROR: request to %s returns: %s\n", url, errs[0])
 		return http.StatusInternalServerError, ""
 	}
 
