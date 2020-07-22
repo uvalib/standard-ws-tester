@@ -19,7 +19,7 @@ func TestHealthCheck(t *testing.T) {
 	// enumerate each section and ensure that the health is reported as true
 	for k, v := range response {
 		if v.Healthy != true {
-			t.Fatalf("Expected healthy for %s\n", k )
+			t.Fatalf("Expected healthy for %s\n", k)
 		}
 	}
 }

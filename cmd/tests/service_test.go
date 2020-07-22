@@ -41,8 +41,8 @@ func loadConfig() testConfig {
 	}
 
 	// allow environment variables to override the configuration file
-	if len( os.Getenv( "TC_ENDPOINT" ) ) != 0 {
-		c.Endpoint = os.Getenv( "TC_ENDPOINT" )
+	if len(os.Getenv("TC_ENDPOINT")) != 0 {
+		c.Endpoint = os.Getenv("TC_ENDPOINT")
 	}
 
 	log.Printf("endpoint [%s]\n", c.Endpoint)

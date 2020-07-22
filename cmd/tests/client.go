@@ -3,7 +3,6 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/parnurzeal/gorequest"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,41 +11,40 @@ import (
 
 var debugHTTP = false
 var serviceTimeout = 15
+var client = newHttpClient(serviceTimeout)
+
+//
+// newHttpClient -- create a new client
+//
+func newHttpClient(timeout int) *http.Client {
+
+	return &http.Client{
+		Timeout: time.Duration(timeout) * time.Second,
+	}
+}
 
 //
 // HealthCheck -- calls the service health check method
 //
-func HealthCheck(endpoint string) (int, map[string] HealthCheckResult ) {
+func HealthCheck(endpoint string) (int, map[string]HealthCheckResult) {
 
 	url := fmt.Sprintf("%s/healthcheck", endpoint)
-	//fmt.Printf( "%s\n", url )
 
-	resp, body, errs := gorequest.New().
-		SetDebug(debugHTTP).
-		Get(url).
-		Set("Accept", "application/json").
-		Set("Content-Type", "").
-		Timeout(time.Duration(serviceTimeout) * time.Second).
-		End()
-
-	if errs != nil {
-		fmt.Printf( "ERROR: request to %s returns: %s\n", url, errs[0])
-		return http.StatusInternalServerError, nil
+	status, body := httpGet(url)
+	if status != http.StatusOK {
+		return status, nil
 	}
-
-	defer io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
 
 	// cos we dont really know the field names ahead of time
-	m := make( map[string] HealthCheckResult )
+	r := make(map[string]HealthCheckResult)
 
-	err := json.Unmarshal([]byte(body), &m)
+	err := json.Unmarshal(body, &r)
 	if err != nil {
-		fmt.Printf( "ERROR: unmarshal of [%s] returns: %s\n", body, err)
+		fmt.Printf("ERROR: unmarshal of [%s] returns: %s\n", body, err)
 		return http.StatusInternalServerError, nil
 	}
 
-	return resp.StatusCode, m
+	return status, r
 }
 
 //
@@ -55,32 +53,20 @@ func HealthCheck(endpoint string) (int, map[string] HealthCheckResult ) {
 func VersionCheck(endpoint string) (int, string) {
 
 	url := fmt.Sprintf("%s/version", endpoint)
-	//fmt.Printf( "%s\n", url )
 
-	resp, body, errs := gorequest.New().
-		SetDebug(debugHTTP).
-		Get(url).
-		Set("Accept", "application/json").
-		Set("Content-Type", "").
-		Timeout(time.Duration(serviceTimeout) * time.Second).
-		End()
-
-	if errs != nil {
-		fmt.Printf( "ERROR: request to %s returns: %s\n", url, errs[0])
-		return http.StatusInternalServerError, ""
+	status, body := httpGet(url)
+	if status != http.StatusOK {
+		return status, ""
 	}
-
-	defer io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
 
 	r := VersionResponse{}
 	err := json.Unmarshal([]byte(body), &r)
 	if err != nil {
-		fmt.Printf( "ERROR: unmarshal of [%s] returns: %s\n", body, err)
+		fmt.Printf("ERROR: unmarshal of [%s] returns: %s\n", body, err)
 		return http.StatusInternalServerError, ""
 	}
 
-	return resp.StatusCode, r.Build
+	return status, r.Build
 }
 
 //
@@ -89,25 +75,50 @@ func VersionCheck(endpoint string) (int, string) {
 func MetricsCheck(endpoint string) (int, string) {
 
 	url := fmt.Sprintf("%s/metrics", endpoint)
-	//fmt.Printf( "%s\n", url )
 
-	resp, body, errs := gorequest.New().
-		SetDebug(debugHTTP).
-		Get(url).
-		Set("Accept", "*/*").
-		Set("Content-Type", "").
-		Timeout(time.Duration(serviceTimeout) * time.Second).
-		End()
-
-	if errs != nil {
-		fmt.Printf( "ERROR: request to %s returns: %s\n", url, errs[0])
-		return http.StatusInternalServerError, ""
+	status, body := httpGet(url)
+	if status != http.StatusOK {
+		return status, ""
 	}
 
-	defer io.Copy(ioutil.Discard, resp.Body)
-	defer resp.Body.Close()
+	return status, string(body)
+}
 
-	return resp.StatusCode, body
+func httpGet(url string) (int, []byte) {
+
+	//fmt.Printf( "%s\n", url )
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("ERROR: request (%s) returns: %s\n", url, err)
+		return http.StatusInternalServerError, nil
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "")
+
+	response, err := client.Do(req)
+
+	if err != nil {
+		fmt.Printf("ERROR: request (%s) returns: %s\n", url, err)
+		return http.StatusInternalServerError, nil
+	}
+
+	defer io.Copy(ioutil.Discard, response.Body)
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		fmt.Printf("ERROR: request (%s) returns: HTTP %d\n", url, response.StatusCode)
+		return response.StatusCode, nil
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Printf("ERROR: request (%s) returns: %s\n", url, err)
+		return http.StatusInternalServerError, nil
+	}
+
+	return response.StatusCode, body
 }
 
 //

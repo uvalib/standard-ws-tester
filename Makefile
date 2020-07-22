@@ -6,11 +6,21 @@ GOBUILD = $(GOCMD) build
 GOCLEAN = $(GOCMD) clean
 GOTEST = $(GOCMD) test
 GOGET = $(GOCMD) get
+GOMOD = $(GOCMD) mod
+GOFMT = $(GOCMD) fmt
+GOVET = $(GOCMD) vet
 
 test:
 	@ \
 	(cd "$(SRCDIR)/tests" && $(GOTEST) -v) ;
 
-#deps:
-#	cd $(SRCDIR); $(GOGET) -u
-#	$(GOMOD) tidy
+dep:
+	cd $(SRCDIR)/tests; $(GOGET) -u
+	$(GOMOD) tidy
+	$(GOMOD) verify
+
+fmt:
+	cd $(SRCDIR)/tests; $(GOFMT)
+
+vet:
+	cd $(SRCDIR)/tests; $(GOVET)
